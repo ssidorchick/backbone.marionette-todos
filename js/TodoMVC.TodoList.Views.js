@@ -8,10 +8,11 @@ TodoMVC.module('TodoList.Views', function(Views, App, Backbone, Marionette, $, _
 		},
 
 		events: {
-			"click .destroy": "destroy",
-			"dbClick label": "onEditClick",
-			"keypress .edit": "onEditKeypress",
-			"click .toggle": "toggle",
+			'click .destroy': 'destroy',
+			'dblclick label': 'onEditClick',
+			'keydown .edit': 'onEditKeypress',
+			'focusout .edit': 'onEditFocusout',
+			'click .toggle': 'toggle'
 		},
 
 		initialize: function() {
@@ -38,13 +39,29 @@ TodoMVC.module('TodoList.Views', function(Views, App, Backbone, Marionette, $, _
 		onEditClick: function() {
 			this.$el.addClass('editing');
 			this.ui.edit.focus();
+			this.ui.edit.val(this.ui.edit.val());
 		},
 
-		onEditKeypress: function(evt) {
-			var ENTER_KEY = 13;
+		onEditFocusout: function () {
 			var todoText = this.ui.edit.val().trim();
-			if (evt.which === ENTER_KEY && todoText) {
+			if (todoText) {
 				this.model.set('title', todoText).save();
+				this.$el.removeClass('editing');
+			} else {
+				this.destroy();
+			}
+		},
+
+		onEditKeypress: function(e) {
+			var ENTER_KEY = 13, ESC_KEY = 27;
+
+			if (e.which === ENTER_KEY) {
+				this.onEditFocusout();
+				return;
+			}
+
+			if (e.which === ESC_KEY) {
+				this.ui.edit.val(this.model.get('title'));
 				this.$el.removeClass('editing');
 			}
 		}

@@ -39,7 +39,7 @@ TodoMVC.module('TodoList', function(TodoList, App, Backbone, Marionette, $, _) {
 		},
 
 		filterItems: function(filter) {
-			App.vent.trigger('todoList:filter', filter.trim() || '');
+			App.vent.trigger('todoList:filter', (filter && filter.trim()) || '');
 		}
 	});
 

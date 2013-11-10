@@ -12,7 +12,7 @@ TodoMVC.module('Layout', function(Layout, App, Backbone, Marionette, $, _) {
 
 		onInputKeyPress: function(e) {
 			var ENTER_KEY = 13;
-			var todoText = this.input.val().trim();
+			var todoText = this.ui.input.val().trim();
 
 			if (e.which === ENTER_KEY && todoText) {
 				this.collection.create({
@@ -24,10 +24,9 @@ TodoMVC.module('Layout', function(Layout, App, Backbone, Marionette, $, _) {
 	});
 
 	Layout.Footer = Marionette.ItemView.extend({
-		template: '#footer-template',
+		template: '#template-footer',
 
 		ui: {
-			count: '#todo-count strong',
 			filters: '#filters a'
 		},
 
@@ -35,36 +34,46 @@ TodoMVC.module('Layout', function(Layout, App, Backbone, Marionette, $, _) {
 			'click #clear-completed': 'onClearClick'
 		},
 
+		collectionEvents: {
+			'all': 'render'
+		},
+
+		templateHelpers: {
+			activeCountLabel: function () {
+				return (this.activeCount === 1 ? 'item' : 'items') + ' left';
+			}
+		},
+
 		initialize: function() {
 			this.listenTo(App.vent, 'todoList:filter', this.updateFilterSelection);
-			this.listenTo(this.collection, 'all', this.updateCount);
+		},
+
+		serializeData: function () {
+			var active = this.collection.getActive().length;
+			var total = this.collection.length;
+
+			return {
+				activeCount: active,
+				totalCount: total,
+				completedCount: total - active
+			};
 		},
 
 		onRender: function() {
-			this.updateCount();
-		},
-
-		updateCount: function() {
-			var count = this.collection.getActive().length;
-			this.ui.count.html(count);
-
-			if (count === 0) {
-				this.$el.parent().hide();
-			} else {
-				this.$el.parent().show();
-			}
+			this.$el.parent().toggle(this.collection.length > 0);
+			this.updateFilterSelection();
 		},
 
 		updateFilterSelection: function() {
 			this.ui.filters
 				.removeClass('selected')
-				.filter('[href="#' + filter + '"]')
+				.filter('[href="' + (location.hash || '#') + '"]')
 				.addClass('selected');
 		},
 
 		onClearClick: function() {
 			var completed = this.collection.getCompleted();
-			completed.forEach(function destroy(todo) {
+			completed.forEach(function(todo) {
 				todo.destroy();
 			});
 		}
